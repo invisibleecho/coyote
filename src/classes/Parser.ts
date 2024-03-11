@@ -1,4 +1,4 @@
-import { TYPE, type Token, type NullableToken, type Decorator, type Property, type AbstractSyntaxTree } from './../types/coyote.types';
+import { TYPE, type Token, type NullableToken, type Decorator, type Field, type AbstractSyntaxTree } from './../types/coyote.types';
 
 /**
  * Parser class of the coyote schema language.
@@ -73,22 +73,22 @@ export class Parser {
   /**
    * @rule object
    */
-  public object(): Property[] {
-    let properties: Property[] = [];
+  public object(): Field[] {
+    let fields: Field[] = [];
     this.expect<void>([TYPE.LEFT_BRACE], (token: NullableToken) => {
       if (!token) throw new Error(`Parser Error: Expecting object literal '{'.`);
-      while (!this.finished() && !this.check(TYPE.RIGHT_BRACE)) properties.push(this.property());
+      while (!this.finished() && !this.check(TYPE.RIGHT_BRACE)) fields.push(this.field());
       this.expect<void>([TYPE.RIGHT_BRACE], (token: NullableToken) => {
-        if (!token) throw new Error(`Parser Error: Expecting '}' after object properties.`);
+        if (!token) throw new Error(`Parser Error: Expecting '}' after object fields.`);
       });
     });
-    return properties;
+    return fields;
   }
 
   /**
-   * @rule property
+   * @rule field
    */
-  public property(): Property {
+  public field(): Field {
     const name = this.identifier();
     const optional = this.optional();
     const type = this.type();
@@ -140,10 +140,10 @@ export class Parser {
   public decorators(): Decorator[] {
     const decorators: Decorator[] = [];
     const isDecorator = () => this.peek(0)?.lexeme[0] === '@';
-    const isProperty = () => [TYPE.QMARK, TYPE.COLON, TYPE.LEFT_BRACE].includes(this.peek(1)?.type);
+    const isField = () => [TYPE.QMARK, TYPE.COLON, TYPE.LEFT_BRACE].includes(this.peek(1)?.type);
     while (isDecorator() && this.expect<boolean>([TYPE.IDENTIFIER], (token: NullableToken) => !!token)) {
       let decorator: Decorator = { name: this.previous().lexeme.substring(1), arguments: [] };
-      while (!isProperty() && !isDecorator() && this.expect<boolean>([TYPE.IDENTIFIER, TYPE.NUMBER_LITERAL, TYPE.TRUE, TYPE.FALSE], (token: NullableToken) => !!token)) {
+      while (!isField() && !isDecorator() && this.expect<boolean>([TYPE.IDENTIFIER, TYPE.NUMBER_LITERAL, TYPE.TRUE, TYPE.FALSE], (token: NullableToken) => !!token)) {
         switch (this.previous().type) {
           case TYPE.TRUE:
           case TYPE.FALSE:

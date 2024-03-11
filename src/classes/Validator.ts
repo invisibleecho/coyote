@@ -1,4 +1,4 @@
-import type { AbstractSyntaxTree, Property, ValidationError } from './../types/coyote.types';
+import type { AbstractSyntaxTree, Field, ValidationError } from './../types/coyote.types';
 import { RequestValidationError } from './../index';
 
 /**
@@ -22,20 +22,20 @@ export class Validator {
   }
 
   /**
-   * Walks through every property within the provided schema and validates it.
+   * Walks through every field within the provided schema and validates it.
    * @param data 
    * @param schema 
    * @param path 
    */
   private walk(data: any, schema: AbstractSyntaxTree, path: string = ''): void {
     let unknownKeys = Object.keys(data);
-    schema.forEach(property => {
-      const name = property.name;
+    schema.forEach(field => {
+      const name = field.name;
       const fullName = path + name;
       try {
-        this.assert(fullName, property, data[name]);
-        if (property.type === 'object' && property.children.length > 0) {
-          this.walk(data[property.name] || {}, property.children, fullName + '.');
+        this.assert(fullName, field, data[name]);
+        if (field.type === 'object' && field.children.length > 0) {
+          this.walk(data[field.name] || {}, field.children, fullName + '.');
         }
       } catch (error) {
         if (error instanceof Error) this.errors.push({ name: fullName, message: error.message });
@@ -43,18 +43,18 @@ export class Validator {
       unknownKeys = unknownKeys.filter(k => k !== name);
     });
     // Unknown keys which are not defined within the schema are forbidden
-    unknownKeys.forEach(key => this.errors.push({ name: path + key, message: `Property '${path + key}' is not defined within the provided schema.` }));
+    unknownKeys.forEach(key => this.errors.push({ name: path + key, message: `Field '${path + key}' is not defined within the provided schema.` }));
   }
 
   /**
-   * Asserts a single property against the provided schema.
-   * @param fullName Fully-qualified property name
-   * @param property Property object
+   * Asserts a single field against the provided schema.
+   * @param fullName Fully-qualified field name
+   * @param field Field object
    * @param value Passed value
    * @throws Error
    */
-  private assert(fullName: string, property: Property, value: any): void {
-    const type = property.type;
+  private assert(fullName: string, field: Field, value: any): void {
+    const type = field.type;
     const passedType = (value as Object)?.constructor?.name;
     let isOfValidType = false;
     switch (type) {
@@ -63,7 +63,7 @@ export class Validator {
       case 'boolean':
       case 'object':
         isOfValidType = type === passedType?.toLowerCase();
-        if (isOfValidType && type !== 'object') this.decorated(fullName, property, value);
+        if (isOfValidType && type !== 'object') this.decorated(fullName, field, value);
         break;
       case 'string[]':
       case 'number[]':
@@ -72,23 +72,23 @@ export class Validator {
         isOfValidType = passedType === 'Array' && (value as Array<any>).every((element: Object) => (element.constructor.name.toLowerCase() === scalarType));
         break;
     }
-    if (typeof passedType === 'undefined' && !property.optional) {
-      throw new Error(`Property ${fullName} (optional: ${property.optional}) was not passed. Consider marking it optional.`)
+    if (typeof passedType === 'undefined' && !field.optional) {
+      throw new Error(`Field ${fullName} (optional: ${field.optional}) was not passed. Consider marking it optional.`)
     }
-    if (!isOfValidType && (!property.optional || typeof passedType !== 'undefined')) {
-      throw new Error(`Property ${fullName} (optional: ${property.optional}, type: ${passedType.toLowerCase()}) does not match the defined type ${type}.`);
+    if (!isOfValidType && (!field.optional || typeof passedType !== 'undefined')) {
+      throw new Error(`Field ${fullName} (optional: ${field.optional}, type: ${passedType.toLowerCase()}) does not match the defined type ${type}.`);
     }
   }
 
   /**
-   * Asserts a single property against each defined decorator.
-   * @param fullName Fully-qualified property name
-   * @param property Property object
+   * Asserts a single field against each defined decorator.
+   * @param fullName Fully-qualified field name
+   * @param field Field object
    * @param value Passed value
    * @throws Error
    */
-  private decorated(fullName: string, property: Property, value: any) {
-    property.decorators.forEach(decorator => {
+  private decorated(fullName: string, field: Field, value: any) {
+    field.decorators.forEach(decorator => {
       let asserted = false;
       try {
         asserted = Decorators[decorator.name](value, ...decorator.arguments);
@@ -96,7 +96,7 @@ export class Validator {
         throw new Error(`Decorator '${decorator.name}' could not be invoked.`);
       }
       if (!asserted) {
-        throw new Error(`Property ${fullName} (optional: ${property.optional}, decorator: ${decorator.name}) could not be validated.`);
+        throw new Error(`Field ${fullName} (optional: ${field.optional}, decorator: ${decorator.name}) could not be validated.`);
       }
     });
   }

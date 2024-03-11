@@ -1,5 +1,5 @@
 export type NullableToken = Token | null;
-export type AbstractSyntaxTree = Property[];
+export type AbstractSyntaxTree = Field[];
 
 export enum TYPE {
   LEFT_BRACE, RIGHT_BRACE, COLON, QMARK,
@@ -15,12 +15,12 @@ export interface Token {
   length: number;
 }
 
-export interface Property {
+export interface Field {
   name: string;
   type: string;
   optional: boolean;
   decorators: Decorator[];
-  children: Property[];
+  children: Field[];
 }
 
 export interface Decorator {
