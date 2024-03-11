@@ -1,0 +1,9 @@
+{
+  "name": "coyote",
+  "version": "1.0.0",
+  "description": "A micro schema language intended for request validation.",
+  "exports": null,
+  "keywords": ["coyote", "language", "schema", "validation"],
+  "author": "invisibleecho",
+  "license": "MIT"
+}
