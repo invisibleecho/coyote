@@ -28,7 +28,7 @@ However, since validation is important for pretty much every API we can make thi
 And that's why I wrote coyote.
 
 ## The gist
-We define a schema which describes the shape of the data within request body.
+We define a schema which describes the shape of the data within the request body.
 When dealing with large request bodies it's cumbersome to validate each possible field, required or not. 
 
 Also it's good practise to only allow fields you actually want, which means that you should discard the request if unknown data is being sent.
